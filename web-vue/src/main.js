@@ -1,7 +1,8 @@
-import "./assets/main.css";
 import { registerSW } from "virtual:pwa-register";
 import { createApp } from "vue";
 import App from "./App.vue";
+import {router} from "./router";
+import "@/assets/main.css";
 
 const updateSW = registerSW({
   immediate: true,
@@ -12,4 +13,5 @@ const updateSW = registerSW({
     console.log("App ready to work offline");
   },
 });
-createApp(App).mount("#app");
+
+createApp(App).use(router).mount("#app");
