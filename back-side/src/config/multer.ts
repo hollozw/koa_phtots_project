@@ -10,7 +10,7 @@ const storage = multer.diskStorage({
     const res = await dirList.addDir(name);
     const dirName = res?.id || "";
 
-    cb(null, rootPath("asserts", "images", dirName));
+    cb(null, rootPath("asserts", "backImages", dirName));
   },
   filename: (req, file, cb) => {
     const { name, ext } = path.parse(file.originalname);

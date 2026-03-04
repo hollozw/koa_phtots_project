@@ -62,7 +62,7 @@ export class DirList {
       links: [],
     };
     this.data.push(dirInfo);
-    await fs.mkdir(rootPath("asserts", "images", id), {
+    await fs.mkdir(rootPath("asserts", "backImages", id), {
       recursive: true,
     });
     return dirInfo;

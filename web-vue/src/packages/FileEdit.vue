@@ -4,9 +4,10 @@ import instance from "@/axios";
 import Sortable from "sortablejs";
 
 const imaRef = ref(null);
-const images = reactive([]);
+const images = ref([]);
 const fileList = ref([]);
 const dirName = ref("");
+const starFile = ref("0");
 
 async function onFileChange(event) {
   const files = Array.from(event.target.files);
@@ -15,7 +16,7 @@ async function onFileChange(event) {
   });
   fileList.value.forEach((file, index) => {
     const url = URL.createObjectURL(file);
-    images[index] = {
+    images.value[index] = {
       imageUrl: url,
       name: file.name,
       id: index + "",
@@ -27,6 +28,7 @@ async function onFileChange(event) {
 function createFormData(dirName, files) {
   const formData = new FormData();
   formData.append("name", dirName);
+  formData.append("startName", dirName);
   files.forEach((file) => {
     formData.append("images", file);
   });
@@ -34,10 +36,14 @@ function createFormData(dirName, files) {
 }
 
 async function upload() {
-  if (fileList.value.length === 0 || !dirName.value || dirName.value.trim() === "") {
+  if (
+    fileList.value.length === 0 ||
+    !dirName.value ||
+    dirName.value.trim() === ""
+  ) {
     return;
   }
-	const dirNameValue = dirName.value.trim();
+  const dirNameValue = dirName.value.trim();
   const newFileList = fileList.value.map((file, index) => {
     let extension = file.name.split(".").pop(); // 获取文件扩展名
     return new File(
@@ -47,7 +53,12 @@ async function upload() {
     );
   });
   const formData = createFormData(dirNameValue, newFileList);
-  const res = await instance.post("/api/file/addFiles", formData);
+  const res: any = await instance.post("/api/file/addFiles", formData);
+  if (res?.code === 200) {
+    images.value = [];
+    fileList.value = [];
+    dirName.value = "";
+  }
 }
 
 function reNameByIndex(index: number) {
@@ -56,6 +67,10 @@ function reNameByIndex(index: number) {
     str = "0" + str;
   }
   return str;
+}
+
+function changeStarFile(index: string) {
+  starFile.value = index;
 }
 
 onMounted(() => {
@@ -83,9 +98,25 @@ onMounted(() => {
       @change="onFileChange"
     />
     <div class="file-img" ref="imaRef">
-      <img v-for="item in images" class="images" :src="item.imageUrl" />
+      <div v-for="(item, index) in images" class="images">
+        <div
+          :class="`images-start ${starFile === index + '' ? 'images-start-click' : ''}`"
+          @click="
+            () => {
+              changeStarFile(index + '');
+            }
+          "
+        ></div>
+        <div class="images-delete"></div>
+        <img style="width: 100%; border-radius: 10px" :src="item.imageUrl" />
+      </div>
     </div>
-		<input class="file-input" type="text" v-model="dirName" placeholder="请输入文件夹名称" />
+    <input
+      class="file-input"
+      type="text"
+      v-model="dirName"
+      placeholder="请输入文件夹名称"
+    />
     <label draggable="false" class="file-img-add" for="fileInput">添加</label>
     <div class="file-submit" @click="upload">提交</div>
   </div>
@@ -113,11 +144,35 @@ onMounted(() => {
     display: grid;
     grid-template-columns: repeat(auto-fill, 250px);
     .images {
+      position: relative;
       max-width: 250px;
       margin: auto;
       box-sizing: border-box;
       padding: 5px;
       cursor: pointer;
+      .images-start {
+        position: absolute;
+        top: 10px;
+        right: 35px;
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background-color: #f59e0b;
+        transition: 0.5s all;
+      }
+      .images-start-click {
+        transform: scale(1.5, 1.5);
+      }
+      .images-delete {
+        position: absolute;
+        top: 10px;
+        right: 15px;
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background-color: #ff6b6b;
+        translate: 1s all;
+      }
     }
   }
 }
@@ -143,19 +198,19 @@ onMounted(() => {
 }
 
 .file-input {
-	width: 200px;
-	height: 40px;
-	line-height: 40px;
-	text-align: center;
-	border-radius: 10px;
-	position: fixed;
-	bottom: 20px;
-	left: 20px;
-	border: 1px solid #ccc;
-	&:focus {
-		outline: none;
-		border-color: #3c89e8;
-	}
+  width: 200px;
+  height: 40px;
+  line-height: 40px;
+  text-align: center;
+  border-radius: 10px;
+  position: fixed;
+  bottom: 20px;
+  left: 20px;
+  border: 1px solid #ccc;
+  &:focus {
+    outline: none;
+    border-color: #3c89e8;
+  }
 }
 .file-submit {
   width: 100px;
